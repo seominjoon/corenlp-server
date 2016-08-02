@@ -88,7 +88,9 @@ public class Server {
     }
 
     private static String get(HttpExchange t) {
-        return convertStreamToString(t.getRequestBody());
+        String out = convertStreamToString(t.getRequestBody());
+        System.out.println("Received: " + out);
+        return out;
     }
 
     private static void send(HttpExchange t, String response) throws IOException {
@@ -97,6 +99,7 @@ public class Server {
         OutputStream os = t.getResponseBody();
         os.write(byteResponse);
         os.close();
+        System.out.println("Sending: " + response);
     }
 
     private static String convertStreamToString(java.io.InputStream is) {
