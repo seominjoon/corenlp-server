@@ -13,7 +13,11 @@ import com.google.gson.Gson;
 public class Server {
 
     public static void main(String[] args) throws Exception {
-        HttpServer server = HttpServer.create(new InetSocketAddress(8000), 0);
+        int port = 8000;
+        if (args.length > 0)
+            port = Integer.parseInt(args[0]);
+        System.out.println("Port: " + port);
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/doc", new DocumentHandler());
         server.createContext("/sent", new SentenceHandler());
         server.createContext("/dep", new DependencyHandler());
