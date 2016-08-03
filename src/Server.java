@@ -88,7 +88,7 @@ public class Server {
 
     private static String get(HttpExchange t) {
         String out = convertStreamToString(t.getRequestBody());
-        System.out.println("Received: " + out);
+        // System.out.println("Received: " + out);
         return out;
     }
 
@@ -98,7 +98,7 @@ public class Server {
         OutputStream os = t.getResponseBody();
         os.write(byteResponse);
         os.close();
-        System.out.println("Sending: " + response);
+        // System.out.println("Sending: " + response);
     }
 
     private static String convertStreamToString(java.io.InputStream is) {
