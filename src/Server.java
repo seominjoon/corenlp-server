@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.simple.*;
 import com.google.gson.Gson;
 
@@ -70,21 +71,15 @@ public class Server {
             String in = get(t);
             Sentence sent = new Sentence(in);
             List<List<Object>> deps = new ArrayList<>();
-            for (int i = 0; i < sent.length(); i++) {
-                String word = sent.word(i);
-                if (sent.governor(i).isPresent() && sent.incomingDependencyLabel(i).isPresent()) {
-                    int governor = sent.governor(i).get();
-                    String label = sent.incomingDependencyLabel(i).get();
-                    List<Object> curDeps = new ArrayList<>();
-                    curDeps.add(word);
-                    curDeps.add(governor);
-                    curDeps.add(label);
-                    deps.add(curDeps);
-                }
-                else {
-                    System.out.println("error");
-                    send(t, "error");
-                }
+            for (SemanticGraphEdge e : sent.dependencyGraph().edgeListSorted()) {
+                int d = e.getTarget().index();
+                int g = e.getSource().index();
+                String l = e.getRelation().toString();
+                List<Object> list = new ArrayList<>();
+                list.add(d);
+                list.add(g);
+                list.add(l);
+                deps.add(list);
             }
             String out = new Gson().toJson(deps);
             send(t, out);
