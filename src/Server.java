@@ -75,30 +75,36 @@ public class Server {
         @Override
         public void handle(HttpExchange t) throws IOException {
             String in = get(t);
-            Sentence sent = new Sentence(in);
-            List<List<Object>> deps = new ArrayList<>();
-            IndexedWord[] indexedWords = new IndexedWord[sent.length()];
-            for (SemanticGraphEdge e : sent.dependencyGraph().edgeListSorted()) {
-                List<Object> list = new ArrayList<>();
-                int di = e.getDependent().index() - 1;
-                int gi = e.getGovernor().index() - 1;
-                list.add(di);
-                list.add(gi);
-                list.add(e.getRelation().getShortName());
-                deps.add(list);
-                System.out.println(e);
-                indexedWords[di] = e.getDependent();
-                indexedWords[gi] = e.getGovernor();
-            }
+            String outString = "";
+            try {
+                Sentence sent = new Sentence(in);
+                List<List<Object>> deps = new ArrayList<>();
+                IndexedWord[] indexedWords = new IndexedWord[sent.length()];
+                for (SemanticGraphEdge e : sent.dependencyGraph().edgeListSorted()) {
+                    List<Object> list = new ArrayList<>();
+                    int di = e.getDependent().index() - 1;
+                    int gi = e.getGovernor().index() - 1;
+                    list.add(di);
+                    list.add(gi);
+                    list.add(e.getRelation().getShortName());
+                    deps.add(list);
+                    System.out.println(e);
+                    indexedWords[di] = e.getDependent();
+                    indexedWords[gi] = e.getGovernor();
+                }
 
-            List<Object> lists = new ArrayList<>();
-            for (IndexedWord w : indexedWords) {
-                lists.add(indexedWordToList(w));
+                List<Object> lists = new ArrayList<>();
+                for (IndexedWord w : indexedWords) {
+                    lists.add(indexedWordToList(w));
+                }
+                List<Object> out = new ArrayList<>();
+                out.add(lists);
+                out.add(deps);
+                outString = new Gson().toJson(out);
+            } catch (Exception e){
+                System.out.println(e.getMessage());
+                outString = "error";
             }
-            List<Object> out = new ArrayList<>();
-            out.add(lists);
-            out.add(deps);
-            String outString = new Gson().toJson(out);
             send(t, outString);
 
         }
