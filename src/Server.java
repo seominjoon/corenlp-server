@@ -7,6 +7,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import edu.stanford.nlp.ling.IndexedWord;
+import edu.stanford.nlp.scoref.DocumentProcessor;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.simple.*;
 import com.google.gson.Gson;
@@ -65,30 +67,55 @@ public class Server {
         }
     }
 
+    /*
+    each tuple is (dw, d, i, gw, g, j, l):
+    d: dependent
+     */
     private static class DependencyHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange t) throws IOException {
             String in = get(t);
             Sentence sent = new Sentence(in);
             List<List<Object>> deps = new ArrayList<>();
+            IndexedWord[] indexedWords = new IndexedWord[sent.length()];
             for (SemanticGraphEdge e : sent.dependencyGraph().edgeListSorted()) {
-                int d = e.getTarget().index();
-                int g = e.getSource().index();
-                String l = e.getRelation().toString();
                 List<Object> list = new ArrayList<>();
-                list.add(d);
-                list.add(g);
-                list.add(l);
+                int di = e.getDependent().index() - 1;
+                int gi = e.getGovernor().index() - 1;
+                list.add(di);
+                list.add(gi);
+                list.add(e.getRelation().getShortName());
                 deps.add(list);
+                System.out.println(e);
+                indexedWords[di] = e.getDependent();
+                indexedWords[gi] = e.getGovernor();
             }
-            String out = new Gson().toJson(deps);
-            send(t, out);
+
+            List<Object> lists = new ArrayList<>();
+            for (IndexedWord w : indexedWords) {
+                lists.add(indexedWordToList(w));
+            }
+            List<Object> out = new ArrayList<>();
+            out.add(lists);
+            out.add(deps);
+            String outString = new Gson().toJson(out);
+            send(t, outString);
+
         }
+    }
+
+    public static List<Object> indexedWordToList(IndexedWord w) {
+        List<Object> out = new ArrayList<>();
+        out.add(w.word());
+        out.add(w.tag());
+        out.add(w.beginPosition());
+        out.add(w.endPosition());
+        return out;
     }
 
     private static String get(HttpExchange t) {
         String out = convertStreamToString(t.getRequestBody());
-        // System.out.println("Received: " + out);
+        System.out.println("Received: " + out);
         return out;
     }
 
@@ -98,7 +125,7 @@ public class Server {
         OutputStream os = t.getResponseBody();
         os.write(byteResponse);
         os.close();
-        // System.out.println("Sending: " + response);
+        System.out.println("Sending: " + response);
     }
 
     private static String convertStreamToString(java.io.InputStream is) {
