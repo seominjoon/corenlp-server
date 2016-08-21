@@ -49,7 +49,7 @@ public class Server {
             String in = get(t);
             Sentence sent = new Sentence(in);
             List<String> words = new ArrayList<>();
-            for (String word : sent.words()) {
+            for (String word : sent.originalTexts()) {
                 words.add(word);
             }
             String out = new Gson().toJson(words);
@@ -80,6 +80,7 @@ public class Server {
                 Sentence sent = new Sentence(in);
                 List<List<Object>> deps = new ArrayList<>();
                 IndexedWord[] indexedWords = new IndexedWord[sent.length()];
+                assert sent.dependencyGraph().edgeListSorted().size() == sent.words().size();
                 for (SemanticGraphEdge e : sent.dependencyGraph().edgeListSorted()) {
                     List<Object> list = new ArrayList<>();
                     int di = e.getDependent().index() - 1;
@@ -112,6 +113,7 @@ public class Server {
 
     public static List<Object> indexedWordToList(IndexedWord w) {
         List<Object> out = new ArrayList<>();
+        out.add(w.originalText());
         out.add(w.word());
         out.add(w.tag());
         out.add(w.beginPosition());
